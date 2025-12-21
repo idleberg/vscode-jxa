@@ -34,7 +34,7 @@
 	"bugs": {
 		"url": "https://github.com/idleberg/vscode-jxa/issues"
 	},
-	"main": "./lib/index.js",
+	"main": "./lib/index.cjs",
 	"icon": "resources/logo.png",
 	"engines": {
 		"vscode": "^1.85.0"
