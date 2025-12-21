@@ -2,7 +2,7 @@
 	"name": "jxa",
 	"displayName": "JXA",
 	"description": "Language syntax, snippets and build system for JavaScript for Automation (JXA)",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"publisher": "idleberg",
 	"license": "MIT",
 	"author": {
