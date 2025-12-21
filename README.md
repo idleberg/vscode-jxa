@@ -1,13 +1,13 @@
 # AppleScript for Visual Studio Code
 
-[![Version](https://img.shields.io/github/v/release/idleberg/vscode-applescript?style=for-the-badge)](https://github.com/idleberg/vscode-applescript/releases)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/idleberg.applescript?style=for-the-badge&label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=idleberg.applescript)
+[![Version](https://img.shields.io/github/v/release/idleberg/vscode-jxa?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/releases)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/idleberg.jxa?style=for-the-badge&label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=idleberg.jxa)
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/idleberg/applescript?style=for-the-badge&label=Open%20VSX)](https://open-vsx.org/extension/idleberg/applescript)
-[![Build](https://img.shields.io/github/actions/workflow/status/idleberg/vscode-applescript/default.yml?style=for-the-badge)](https://github.com/idleberg/vscode-applescript/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/idleberg/vscode-jxa/default.yml?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/actions)
 
 Language syntax, snippets and build system for AppleScript and JavaScript for Automation
 
-![Screenshot](https://raw.githubusercontent.com/idleberg/vscode-applescript/main/resources/screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/idleberg/vscode-jxa/main/resources/screenshot.png)
 
 _Screenshot of AppleScript in Visual Studio Code with [Hopscotch](https://marketplace.visualstudio.com/items?itemName=idleberg.hopscotch) theme_
 
@@ -17,17 +17,17 @@ _Screenshot of AppleScript in Visual Studio Code with [Hopscotch](https://market
 
 Launch Quick Open, paste the following command, and press <kbd>Enter</kbd>
 
-`ext install idleberg.applescript`
+`ext install idleberg.jxa`
 
 ### CLI
 
 With [shell commands](https://code.visualstudio.com/docs/editor/command-line) installed, you can use the following command to install the extension:
 
-`$ code --install-extension idleberg.applescript`
+`$ code --install-extension idleberg.jxa`
 
 ### Packaged Extension
 
-Download the packaged extension from the the [release page](https://github.com/idleberg/vscode-applescript/releases) and install it from the command-line:
+Download the packaged extension from the the [release page](https://github.com/idleberg/vscode-jxa/releases) and install it from the command-line:
 
 ```bash
 $ code --install-extension path/to/applescript-*.vsix
@@ -36,7 +36,7 @@ $ code --install-extension path/to/applescript-*.vsix
 Alternatively, you can download the packaged extension from the [Open VSX Registry](https://open-vsx.org/) or install it using the [`ovsx`](https://www.npmjs.com/package/ovsx) command-line tool:
 
 ```bash
-$ ovsx get idleberg.applescript
+$ ovsx get idleberg.jxa
 ```
 
 ## Usage

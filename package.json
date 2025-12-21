@@ -11,9 +11,7 @@
 	},
 	"scripts": {
 		"compile": "npm run build",
-		"build": "concurrently --prefix-colors 'blue,green' 'npm:build:*'",
-		"build:code": "tsdown",
-		"build:image": "sharp resize 1024 1024 --input node_modules/applescript-svg-icon/src/applescript.svg --output resources/logo.png",
+		"build": "tsdown",
 		"dev": "npm run start",
 		"lint": "biome check",
 		"publish:ovsx": "ovsx publish --no-dependencies",
@@ -31,11 +29,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/idleberg/vscode-applescript.git"
+		"url": "https://github.com/idleberg/vscode-jxa.git"
 	},
-	"homepage": "https://github.com/idleberg/vscode-applescript",
+	"homepage": "https://github.com/idleberg/vscode-jxa",
 	"bugs": {
-		"url": "https://github.com/idleberg/vscode-applescript/issues"
+		"url": "https://github.com/idleberg/vscode-jxa/issues"
 	},
 	"main": "./lib/index.js",
 	"icon": "resources/logo.png",
@@ -179,62 +177,6 @@
 		},
 		"commands": [
 			{
-				"command": "extension.applescript.run",
-				"title": "AppleScript: Run Script",
-				"icon": {
-					"dark": "./resources/dark/run.svg",
-					"light": "./resources/light/run.svg"
-				}
-			},
-			{
-				"command": "extension.applescript.compile",
-				"title": "AppleScript: Compile Script",
-				"icon": {
-					"dark": "./resources/dark/script.svg",
-					"light": "./resources/light/script.svg"
-				}
-			},
-			{
-				"command": "extension.applescript.compileBundle",
-				"title": "AppleScript: Compile Script bundle",
-				"icon": {
-					"dark": "./resources/dark/bundle.svg",
-					"light": "./resources/light/bundle.svg"
-				}
-			},
-			{
-				"command": "extension.applescript.compileApp",
-				"title": "AppleScript: Compile Application",
-				"icon": {
-					"dark": "./resources/dark/app.svg",
-					"light": "./resources/light/app.svg"
-				}
-			},
-			{
-				"command": "extension.applescript.openSettings",
-				"title": "AppleScript: Open Settings",
-				"icon": {
-					"dark": "./resources/dark/settings.svg",
-					"light": "./resources/light/settings.svg"
-				}
-			},
-			{
-				"command": "extension.applescript.terminateProcess",
-				"title": "AppleScript: Terminate Process",
-				"icon": {
-					"dark": "./resources/dark/terminate.svg",
-					"light": "./resources/light/terminate.svg"
-				}
-			},
-			{
-				"command": "extension.applescript.createBuildTask",
-				"title": "AppleScript: Create Build Task",
-				"icon": {
-					"dark": "./resources/dark/task.svg",
-					"light": "./resources/light/task.svg"
-				}
-			},
-			{
 				"command": "extension.jxa.run",
 				"title": "JXA: Run Script",
 				"icon": {
@@ -286,41 +228,6 @@
 		"menus": {
 			"editor/title": [
 				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.run",
-					"group": "navigation@1"
-				},
-				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.compile",
-					"group": "navigation@2"
-				},
-				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.compileBundle",
-					"group": "navigation@3"
-				},
-				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.compileApp",
-					"group": "navigation@4"
-				},
-				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.createBuildTask",
-					"group": "navigation@5"
-				},
-				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.terminateProcess",
-					"group": "navigation@6"
-				},
-				{
-					"when": "resourceLangId == applescript",
-					"command": "extension.applescript.openSettings",
-					"group": "navigation@6"
-				},
-				{
 					"when": "resourceLangId == jxa",
 					"command": "extension.jxa.run",
 					"group": "navigation@1"
@@ -352,52 +259,7 @@
 				}
 			]
 		},
-		"keybindings": [
-			{
-				"key": "shift+alt+b",
-				"when": "editorFocus && editorLangId == applescript",
-				"command": "extension.applescript.compile"
-			},
-			{
-				"key": "shift+alt+r",
-				"when": "editorFocus && editorLangId == applescript",
-				"command": "extension.applescript.run"
-			},
-			{
-				"key": "alt+enter",
-				"when": "editorFocus && editorLangId == applescript",
-				"command": "editor.action.insertSnippet",
-				"args": {
-					"langid": "applescript",
-					"name": "continued line"
-				}
-			}
-		],
 		"languages": [
-			{
-				"id": "applescript",
-				"aliases": [
-					"AppleScript",
-					"applescript"
-				],
-				"extensions": [
-					".applescript"
-				],
-				"firstLine": "^#!/.*\\bosascript\\b",
-				"configuration": "./config/applescript.configuration.json"
-			},
-			{
-				"id": "applescript.binary",
-				"aliases": [
-					"Binary AppleScript",
-					"applescript.binary",
-					"scpt"
-				],
-				"extensions": [
-					".scpt"
-				],
-				"configuration": "./config/applescript.configuration.json"
-			},
 			{
 				"id": "jxa",
 				"aliases": [
@@ -431,38 +293,12 @@
 		],
 		"grammars": [
 			{
-				"language": "applescript",
-				"scopeName": "source.applescript",
-				"path": "./syntaxes/applescript.tmLanguage"
-			},
-			{
 				"language": "jxa",
 				"scopeName": "source.js.jxa",
 				"path": "./syntaxes/jxa.tmLanguage",
 				"embeddedLanguages": {
 					"source.js": "javascript"
 				}
-			},
-			{
-				"language": "applescript-injection",
-				"scopeName": "markdown.applescript.codeblock",
-				"path": "./syntaxes/codeblock.json",
-				"injectTo": [
-					"text.html.markdown"
-				],
-				"embeddedLanguages": {
-					"meta.embedded.block.applescript": "applescript"
-				}
-			}
-		],
-		"snippets": [
-			{
-				"language": "applescript",
-				"path": "./snippets/applescript.json"
-			},
-			{
-				"language": "applescript",
-				"path": "./snippets/editor-actions.json"
 			}
 		]
 	},
@@ -478,10 +314,7 @@
 		"@types/line-column": "^1.0.2",
 		"@types/node": "^24.7.0",
 		"@types/vscode": "1.85.0",
-		"applescript-svg-icon": "github:idleberg/applescript-svg-icon",
-		"concurrently": "^9.2.1",
 		"cross-env": "^10.1.0",
-		"sharp-cli": "^5.2.0",
 		"tsdown": "^0.15.6",
 		"typescript": "^5.9.3"
 	},

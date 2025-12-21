@@ -5,11 +5,11 @@ import { getOutName, spawnPromise } from './util.ts';
 
 const outputChannel = window.createOutputChannel('AppleScript');
 
-async function osacompile(compileTarget: string, userOptions: CommandFlags = { isJXA: false }): Promise<void> {
+async function osacompile(compileTarget: string): Promise<void> {
 	const { ignoreOS, osacompile, showNotifications } = await getConfig('applescript');
 
 	// might become useful in a future release
-	const options = { ...userOptions, ...osacompile };
+	const options = { ...osacompile };
 
 	if (platform() !== 'darwin' && ignoreOS !== true) {
 		window.showWarningMessage('This command is only available on macOS');
@@ -19,7 +19,7 @@ async function osacompile(compileTarget: string, userOptions: CommandFlags = { i
 	const doc = window.activeTextEditor?.document;
 
 	if (!doc) {
-		console.error('[idleberg.applescript] Document not found');
+		console.error('[idleberg.jxa] Document not found');
 		return;
 	}
 
@@ -27,9 +27,7 @@ async function osacompile(compileTarget: string, userOptions: CommandFlags = { i
 		const outName = getOutName(doc.fileName, compileTarget);
 		const args: string[] = ['-o', outName];
 
-		if (options.isJXA === true) {
-			args.push('-l', 'JavaScript');
-		}
+		args.push('-l', 'JavaScript');
 
 		if (options.executeOnly === true) {
 			args.push('-x');
@@ -52,7 +50,7 @@ async function osacompile(compileTarget: string, userOptions: CommandFlags = { i
 				}
 			})
 			.catch((error) => {
-				console.error('[idleberg.applescript]', error instanceof Error ? error.message : error);
+				console.error('[idleberg.jxa]', error instanceof Error ? error.message : error);
 
 				outputChannel.show();
 
@@ -63,7 +61,7 @@ async function osacompile(compileTarget: string, userOptions: CommandFlags = { i
 	});
 }
 
-async function osascript(options: CommandFlags = { isJXA: false }): Promise<void> {
+async function osascript(): Promise<void> {
 	const { ignoreOS, osascript, showNotifications } = await getConfig('applescript');
 
 	if (platform() !== 'darwin' && ignoreOS !== true) {
@@ -74,7 +72,7 @@ async function osascript(options: CommandFlags = { isJXA: false }): Promise<void
 	const doc = window?.activeTextEditor?.document;
 
 	if (!doc) {
-		console.error('[idleberg.applescript] Document not found');
+		console.error('[idleberg.jxa] Document not found');
 		return;
 	}
 
@@ -94,12 +92,10 @@ async function osascript(options: CommandFlags = { isJXA: false }): Promise<void
 		args.unshift('-s', osascript.outputStyle.trim());
 	}
 
-	if (options.isJXA === true) {
-		args.unshift('-l', 'JavaScript');
-	}
+	args.unshift('-l', 'JavaScript');
 
 	spawnPromise('osascript', doc.fileName, args, outputChannel).catch((error) => {
-		console.error('[idleberg.applescript]', error instanceof Error ? error.message : error);
+		console.error('[idleberg.jxa]', error instanceof Error ? error.message : error);
 		outputChannel.show();
 
 		if (showNotifications) {

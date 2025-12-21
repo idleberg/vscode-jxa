@@ -11,7 +11,7 @@
 	<key>name</key>
 	<string>JavaScript for Automation (JXA)</string>
 	<key>comment</key>
-	<string>https://github.com/idleberg/vscode-applescript</string>
+	<string>https://github.com/idleberg/vscode-jxa</string>
 	<key>patterns</key>
 	<array>
 		<dict>

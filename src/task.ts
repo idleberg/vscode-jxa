@@ -4,7 +4,7 @@ import { window, workspace } from 'vscode';
 import { getConfig } from 'vscode-get-config';
 import { fileExists, getOutName } from './util.ts';
 
-async function createBuildTask(isJXA = false): Promise<void> {
+async function createBuildTask(): Promise<void> {
 	if (typeof workspace.workspaceFolders === 'undefined' || workspace.workspaceFolders.length < 1) {
 		window.showErrorMessage(
 			'Task support is only available when working on a workspace folder. It is not available when editing single files.',
@@ -17,7 +17,7 @@ async function createBuildTask(isJXA = false): Promise<void> {
 	const doc = window.activeTextEditor?.document;
 
 	if (!doc) {
-		console.error('[idleberg.applescript] Document not found');
+		console.error('[idleberg.jxa] Document not found');
 		return;
 	}
 	const fileName: string = basename(doc.fileName);
@@ -26,9 +26,7 @@ async function createBuildTask(isJXA = false): Promise<void> {
 	const runArgs: string[] = [];
 	const appArgs: string[] = [];
 
-	if (isJXA === true) {
-		args.push('-l', 'JavaScript');
-	}
+	args.push('-l', 'JavaScript');
 
 	if (osacompile.executeOnly === true) {
 		args.push('-x');
@@ -91,7 +89,7 @@ async function createBuildTask(isJXA = false): Promise<void> {
 	try {
 		await fs.mkdir(dotFolder);
 	} catch {
-		console.warn('[idleberg.applescript] This workspace already contains a .vscode folder.');
+		console.warn('[idleberg.jxa] This workspace already contains a .vscode folder.');
 	}
 
 	if (await fileExists(buildFile)) {
@@ -109,7 +107,7 @@ async function createBuildTask(isJXA = false): Promise<void> {
 			window.showTextDocument(taskFile);
 		}
 	} catch (error) {
-		console.error('[idleberg.applescript]', error instanceof Error ? error.message : error);
+		console.error('[idleberg.jxa]', error instanceof Error ? error.message : error);
 	}
 }
 

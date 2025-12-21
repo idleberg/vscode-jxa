@@ -1,680 +1,330 @@
-import { DocumentSymbol, type DocumentSymbolProvider, Range, SymbolKind, type TextDocument } from 'vscode';
+import type { Node } from 'acorn';
+import { DocumentSymbol, type DocumentSymbolProvider, Range, SymbolKind } from 'vscode';
+import type {
+	ArrowFunctionExpression,
+	BaseNode,
+	BlockStatement,
+	ClassDeclaration,
+	DoWhileStatement,
+	ForInStatement,
+	ForOfStatement,
+	ForStatement,
+	FunctionDeclaration,
+	FunctionExpression,
+	Identifier,
+	IfStatement,
+	Program,
+	Statement,
+	SwitchStatement,
+	TryStatement,
+	VariableDeclaration,
+	WhileStatement,
+	WithStatement,
+} from '../types/acorn-types';
 
 /**
- * A parsed function/tell block as returned by the scanner.
+ * Creates a DocumentSymbol from an acorn AST node.
  *
- * Declared as an exported interface so documentation tools (TypeDoc) will
- * present properties in the specified order (name, start, end, type).
+ * @param node - The acorn AST node with location information
+ * @param name - The name to display for this symbol
+ * @param kind - The VS Code SymbolKind for this symbol
+ * @returns A DocumentSymbol with proper range and empty children array
  */
-export interface FunctionBlock {
-	/** Human-friendly name (handler name or tell display). */
-	name: string;
-	/** Start offset in the document (character index). */
-	start: number;
-	/** End offset in the document (character index). */
-	end: number;
-	/** Block type: 'handler' for on/to, or 'tell' for tell blocks. */
-	type: 'handler' | 'tell';
+function createSymbol(node: BaseNode, name: string, kind: SymbolKind): DocumentSymbol {
+	const range = new Range(node.loc.start.line - 1, node.loc.start.column, node.loc.end.line - 1, node.loc.end.column);
+	const symbol = new DocumentSymbol(name, '', kind, range, range);
+	symbol.children = [];
+	return symbol;
 }
 
 /**
- * Parse handler and tell blocks from a TextDocument using a stack-based scanner.
+ * Processes the body of conditional statements and loops.
  *
- * This scanner walks the document line-by-line and maintains a stack of open
- * regions. Handlers ("on"/"to") and "tell" blocks are recorded with their
- * start offsets when they are opened and converted into result entries when
- * their matching "end" is encountered.
+ * Handles both block statements (with curly braces) and single statements.
+ * For block statements, processes all statements within the block.
+ * For single statements, wraps them in an array and processes them.
  *
- * The algorithm is robust to nested blocks like `tell`, `try`, `if` and will
- * correctly ignore `on error` clauses that are part of `try` blocks (these are
- * not top-level handlers). Comment lines starting with `--` are skipped.
- *
- * Returns an array of blocks each with { name, start, end, type } describing
- * the symbol name, start offset, end offset, and whether it's a 'handler' or
- * a 'tell' block.
+ * @param stmt - The statement node (either BlockStatement or any other statement)
+ * @param parent - The parent DocumentSymbol to add nested symbols to
+ * @param processedNodes - WeakSet tracking already processed nodes to avoid duplicates
  */
-export function parseFunctionBlocks(document: TextDocument) {
-	const blockOpeners = ['if', 'repeat', 'try', 'considering', 'ignoring', 'using terms', 'with timeout'] as const;
-	const blockEndQualifiers = ['try', 'if', 'repeat', 'considering', 'ignoring', 'using terms', 'timeout'] as const;
-	const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	// The helper implementations are exported above.
-	// Build a regex for block openers used by the scanner
-	const blockOpenRe = new RegExp(`^\\s*(?:${blockOpeners.map(escapeRegex).join('|')})\\b`, 'i');
+function processConditionalBody(stmt: Statement, parent: DocumentSymbol, processedNodes: WeakSet<Node>) {
+	if (stmt.type === 'BlockStatement') {
+		const blockStmt = stmt as BlockStatement;
+		processBlockContent(blockStmt.body, parent, processedNodes);
+	} else {
+		processBlockContent([stmt], parent, processedNodes);
+	}
+}
 
-	const findLastIndex = <T>(arr: T[], pred: (t: T) => boolean): number => {
-		for (let i = arr.length - 1; i >= 0; i--) if (pred(arr[i] as T)) return i;
-		return -1;
-	};
+/**
+ * Processes variable declaration statements to extract symbols.
+ *
+ * Handles const, let, and var declarations. Determines the appropriate
+ * SymbolKind based on the declaration type and initializer:
+ * - Functions (arrow or regular) become Function symbols with nested content
+ * - Classes become Class symbols
+ * - Constants become Constant symbols
+ * - Regular variables become Variable symbols
+ *
+ * @param node - The VariableDeclaration AST node
+ * @param parentArray - Either an array of symbols or a parent symbol with children
+ * @param processedNodes - WeakSet tracking already processed nodes to avoid duplicates
+ */
+function processVariableDeclaration(
+	node: VariableDeclaration,
+	parentArray: DocumentSymbol[] | DocumentSymbol,
+	processedNodes: WeakSet<Node>,
+) {
+	const targetArray = Array.isArray(parentArray) ? parentArray : parentArray.children || [];
 
-	const functionBlocks: FunctionBlock[] = [];
-	const stack: Array<{ type: 'handler' | 'tell' | 'block'; name?: string; kind?: string; start: number }> = [];
+	for (const decl of node.declarations) {
+		// Skip destructuring patterns for now
+		if (decl.id.type !== 'Identifier') continue;
 
-	for (let ln = 0; ln < document.lineCount; ln++) {
-		const lineRange = document.lineAt(ln).range;
-		const lineText = document.getText(lineRange);
-		if (/^\s*--/.test(lineText)) continue;
-		const openerHandler = /^\s*(?:on|to)\s+(\w+)/i.exec(lineText);
-		if (openerHandler) {
-			const hName = (openerHandler[1] ?? '').toLowerCase();
-			const inTry = stack.some((s) => s.type === 'block' && (s.kind ?? '') === 'try');
-			if (!(hName === 'error' && inTry)) {
-				stack.push({ type: 'handler', name: openerHandler[1] ?? '', start: document.offsetAt(lineRange.start) });
-				continue;
-			}
-		}
-		const tellOpen = /^\s*tell\s+(.*)$/i.exec(lineText);
-		if (tellOpen) {
-			const rest = (tellOpen[1] ?? '').trim();
-			const display = rest ? `tell ${rest}` : 'tell';
-			stack.push({ type: 'tell', name: display, start: document.offsetAt(lineRange.start) });
-			continue;
-		}
-		const blockOpen = blockOpenRe.exec(lineText);
-		if (blockOpen) {
-			const kind = (blockOpen[0] ?? '').trim().toLowerCase();
-			stack.push({ type: 'block', kind, start: document.offsetAt(lineRange.start) });
-			continue;
-		}
-		const endMatch = /^\s*end(?:\s+([\w\s]+))?\b/i.exec(lineText);
-		if (endMatch) {
-			const qualifier = (endMatch[1] ?? '').toLowerCase().trim();
-			const closeAndRecord = (idx: number) => {
-				const item = stack.splice(idx, 1)[0];
-				if (item && (item.type === 'handler' || item.type === 'tell')) {
-					functionBlocks.push({
-						name: item.name ?? '',
-						start: item.start,
-						end: document.offsetAt(lineRange.end),
-						type: item.type,
-					});
+		const id = decl.id as Identifier;
+		let kind = SymbolKind.Variable;
+
+		// Determine the symbol kind based on the initializer
+		if (decl.init) {
+			if (decl.init.type === 'ArrowFunctionExpression' || decl.init.type === 'FunctionExpression') {
+				kind = SymbolKind.Function;
+				const funcSymbol = createSymbol(decl, id.name, kind);
+				targetArray.push(funcSymbol);
+
+				// Process function body if it exists
+				const funcExpr = decl.init as ArrowFunctionExpression | FunctionExpression;
+				if (funcExpr.body.type === 'BlockStatement') {
+					processBlockContent(funcExpr.body.body, funcSymbol, processedNodes);
 				}
-			};
-
-			if (qualifier.startsWith('tell')) {
-				const idx = findLastIndex(stack, (s) => s.type === 'tell');
-				if (idx !== -1) closeAndRecord(idx);
-				else if (stack.length) closeAndRecord(stack.length - 1);
 				continue;
 			}
-			if (blockEndQualifiers.some((k) => (k === 'timeout' ? qualifier.includes('timeout') : qualifier.startsWith(k)))) {
-				const idx = findLastIndex(stack, (s) => s.type === 'block');
-				if (idx !== -1) stack.splice(idx, 1);
-				else if (stack.length) stack.pop();
-				continue;
+			if (decl.init.type === 'ClassExpression') {
+				kind = SymbolKind.Class;
+			} else if (node.kind === 'const') {
+				kind = SymbolKind.Constant;
 			}
-			if (qualifier.length > 0) {
-				const idx = findLastIndex(stack, (s) => s.type === 'handler' && (s.name ?? '').toLowerCase() === qualifier);
-				if (idx !== -1) {
-					closeAndRecord(idx);
-					continue;
-				}
-			}
-			if (stack.length) closeAndRecord(stack.length - 1);
+		} else if (node.kind === 'const') {
+			kind = SymbolKind.Constant;
 		}
-	}
 
-	functionBlocks.sort((a, b) => a.start - b.start);
-	return functionBlocks;
+		targetArray.push(createSymbol(decl, id.name, kind));
+	}
 }
 
 /**
- * Collect property declarations from text.
+ * Recursively processes an array of statements to extract nested symbols.
  *
- * Scans with `propertyRegex` and returns each match as { name, index }.
- * Lines that are commented out (start with `--`) are ignored. The returned
- * index is the character offset in the document where the match starts.
+ * This is the core function that walks through the AST and builds the symbol hierarchy.
+ * It handles various JavaScript/JXA constructs including:
+ * - Function declarations (with nested content)
+ * - Variable declarations (const, let, var)
+ * - Control flow statements (if/else, for, while, try/catch, switch)
+ * - Block statements
+ *
+ * Uses a WeakSet to track processed nodes and avoid duplicate processing,
+ * which is important when dealing with nested structures.
+ *
+ * @param statements - Array of AST statement nodes to process
+ * @param parent - The parent DocumentSymbol to add discovered symbols to
+ * @param processedNodes - WeakSet tracking already processed nodes to avoid duplicates
  */
-export function collectProperties(text: string, document: TextDocument, propertyRegex: RegExp) {
-	const out: Array<{ name: string; index: number }> = [];
-	let m = propertyRegex.exec(text);
-	while (m !== null) {
-		const name = m[1] ?? '';
-		const index = typeof m.index === 'number' ? m.index : 0;
-		const pos = document.positionAt(index);
-		const lt = document.lineAt(pos.line).text;
-		if (!/^\s*--/.test(lt)) out.push({ name, index });
-		m = propertyRegex.exec(text);
-	}
-	return out;
-}
+function processBlockContent(statements: Statement[], parent: DocumentSymbol, processedNodes: WeakSet<Node>) {
+	for (const stmt of statements) {
+		// Skip if already processed
+		if (processedNodes.has(stmt)) continue;
+		processedNodes.add(stmt);
 
-/**
- * Collect variable assignment occurrences from text.
- *
- * Uses `varRegex` to find `set <name> to` occurrences. Commented lines are
- * ignored. Returns an array of { name, index } where index is the offset of
- * the match in the document.
- */
-export function collectVariables(text: string, document: TextDocument, varRegex: RegExp) {
-	const out: Array<{ name: string; index: number }> = [];
-	let m = varRegex.exec(text);
-	while (m !== null) {
-		const name = m[1] ?? '';
-		const index = typeof m.index === 'number' ? m.index : 0;
-		const pos = document.positionAt(index);
-		const lt = document.lineAt(pos.line).text;
-		if (!/^\s*--/.test(lt)) out.push({ name, index });
-		m = varRegex.exec(text);
-	}
-	return out;
-}
+		switch (stmt.type) {
+			case 'FunctionDeclaration': {
+				const funcDecl = stmt as FunctionDeclaration;
+				if (funcDecl.id) {
+					const funcSymbol = createSymbol(funcDecl, funcDecl.id.name, SymbolKind.Function);
+					parent.children?.push(funcSymbol);
 
-/**
- * Build a simple containment tree from an array of blocks.
- *
- * Each block has start/end offsets; this routine assigns a `parent` index
- * for nodes that are contained by an earlier block, and populates `children`
- * arrays on parents. The input is expected to be sorted by start offset.
- */
-export function buildNodeTree(blocks: FunctionBlock[]) {
-	const ns = blocks.map((b, i) => ({ ...b, idx: i, parent: -1 as number, children: [] as number[] }));
-	for (let i = 0; i < ns.length; i++) {
-		for (let j = i - 1; j >= 0; j--) {
-			const ni = ns[i];
-			const nj = ns[j];
-			if (!ni || !nj) continue;
-			if (nj.start <= ni.start && ni.end <= nj.end) {
-				ni.parent = j;
-				nj.children.push(i);
+					// Recursively process nested content
+					processBlockContent(funcDecl.body.body, funcSymbol, processedNodes);
+				}
+				break;
+			}
+
+			case 'VariableDeclaration':
+				processVariableDeclaration(stmt as VariableDeclaration, parent, processedNodes);
+				break;
+
+			case 'IfStatement': {
+				const ifStmt = stmt as IfStatement;
+				// Process if/else blocks
+				processConditionalBody(ifStmt.consequent, parent, processedNodes);
+				if (ifStmt.alternate) {
+					processConditionalBody(ifStmt.alternate, parent, processedNodes);
+				}
+				break;
+			}
+
+			case 'ForStatement': {
+				const forStmt = stmt as ForStatement;
+				processConditionalBody(forStmt.body, parent, processedNodes);
+				break;
+			}
+
+			case 'ForInStatement': {
+				const forInStmt = stmt as ForInStatement;
+				processConditionalBody(forInStmt.body, parent, processedNodes);
+				break;
+			}
+
+			case 'ForOfStatement': {
+				const forOfStmt = stmt as ForOfStatement;
+				processConditionalBody(forOfStmt.body, parent, processedNodes);
+				break;
+			}
+
+			case 'WhileStatement': {
+				const whileStmt = stmt as WhileStatement;
+				processConditionalBody(whileStmt.body, parent, processedNodes);
+				break;
+			}
+
+			case 'DoWhileStatement': {
+				const doWhileStmt = stmt as DoWhileStatement;
+				processConditionalBody(doWhileStmt.body, parent, processedNodes);
+				break;
+			}
+
+			case 'TryStatement': {
+				const tryStmt = stmt as TryStatement;
+				// Process try/catch/finally blocks
+				processBlockContent(tryStmt.block.body, parent, processedNodes);
+				if (tryStmt.handler) {
+					processBlockContent(tryStmt.handler.body.body, parent, processedNodes);
+				}
+				if (tryStmt.finalizer) {
+					processBlockContent(tryStmt.finalizer.body, parent, processedNodes);
+				}
+				break;
+			}
+
+			case 'SwitchStatement': {
+				const switchStmt = stmt as SwitchStatement;
+				// Process switch cases
+				for (const switchCase of switchStmt.cases) {
+					processBlockContent(switchCase.consequent, parent, processedNodes);
+				}
+				break;
+			}
+
+			case 'WithStatement': {
+				const withStmt = stmt as WithStatement;
+				processConditionalBody(withStmt.body, parent, processedNodes);
+				break;
+			}
+
+			case 'BlockStatement': {
+				const blockStmt = stmt as BlockStatement;
+				// Process nested block statements
+				processBlockContent(blockStmt.body, parent, processedNodes);
 				break;
 			}
 		}
 	}
-	return ns;
 }
 
 /**
- * Remove duplicate items based on `name`, keeping the earliest occurrence.
+ * JXA (JavaScript for Automation) Document Symbol Provider.
  *
- * Implementation detail: items are first sorted by their `index` and then
- * filtered so that only the first seen name is included. This is useful for
- * deduping symbol lists while preserving document order.
- */
-export function dedupeByName(items: Array<{ name: string; index: number }>) {
-	const seen = new Set<string>();
-	const result: Array<{ name: string; index: number }> = [];
-	for (const it of items.sort((a, b) => a.index - b.index)) {
-		if (!seen.has(it.name)) {
-			seen.add(it.name);
-			result.push(it);
-		}
-	}
-	return result;
-}
-
-/**
- * Collect top-level entry points (bare calls) from a document.
+ * Uses the acorn JavaScript parser to build a proper symbol hierarchy for JXA files.
+ * This implementation manually walks the AST to extract symbols and maintain their
+ * hierarchical relationships, ensuring that:
+ * - Nested functions within classes are properly shown
+ * - Variables are scoped correctly to their containing functions
+ * - All JavaScript constructs (classes, methods, functions, variables) are recognized
  *
- * This scans the text for bare identifiers or identifier calls (e.g. `foo` or
- * `foo()`) using `entryPointRegex`. Entries that appear inside handler ranges
- * are ignored. Additionally, any function/tell block that has the same name
- * will suppress an entry with that name (so handlers are not double-reported).
- *
- * The returned list is deduped by name (earliest occurrence kept) to avoid
- * reporting repeated top-level calls.
+ * The provider handles various edge cases including:
+ * - Arrow functions and function expressions
+ * - Class declarations and expressions
+ * - Destructuring patterns (currently skipped)
+ * - Control flow statements with nested content
+ * - Duplicate symbol prevention using WeakSet tracking
  */
-export function collectEntryPoints(
-	text: string,
-	document: TextDocument,
-	entryPointRegex: RegExp,
-	handlerRanges: Array<{ start: number; end: number }>,
-	functionBlocks: FunctionBlock[],
-) {
-	// Gather raw matches first (may contain duplicates)
-	const out: Array<{ name: string; index: number }> = [];
-	let m = entryPointRegex.exec(text);
-	while (m !== null) {
-		const name = m[1] ?? '';
-		const index = typeof m.index === 'number' ? m.index : 0;
-		const pos = document.positionAt(index);
-		const lt = document.lineAt(pos.line).text;
-		if (!/^\s*--/.test(lt)) {
-			const isTopLevel = !handlerRanges.some((r) => index > r.start && index < r.end);
-			if (isTopLevel && !functionBlocks.some((h) => h.name === name)) out.push({ name, index });
-		}
-		m = entryPointRegex.exec(text);
-	}
-	// Return deduped entries (preserve earliest occurrence based on index)
-	return dedupeByName(out);
-}
+export const jxaSymbolProvider: DocumentSymbolProvider = {
+	async provideDocumentSymbols(document) {
+		try {
+			const text = document.getText();
 
-/**
- * Build variable symbols belonging to a node but not inside its child nodes.
- */
-export function makeVarSymbolsForNode(
-	nodeIdx: number,
-	nodesArr: ReturnType<typeof buildNodeTree>,
-	variablesArr: Array<{ name: string; index: number }>,
-	document: TextDocument,
-) {
-	const node = nodesArr[nodeIdx];
-	if (!node) return [] as DocumentSymbol[];
-	const childRanges = node.children
-		.map((ci) => nodesArr[ci])
-		.filter((c): c is typeof node => Boolean(c))
-		.map((c) => ({ start: c.start, end: c.end }));
-	const ownVars = variablesArr.filter(
-		(v) => v.index > node.start && v.index < node.end && !childRanges.some((r) => v.index > r.start && v.index < r.end),
-	);
-	return dedupeByName(ownVars).map((v) => {
-		const varStart = document.positionAt(v.index);
-		const varLineEnd = document.lineAt(varStart.line).range.end;
-		return new DocumentSymbol(
-			v.name,
-			'',
-			SymbolKind.Variable,
-			new Range(varStart, varLineEnd),
-			new Range(varStart, varStart),
-		);
-	});
-}
+			// Use acorn to parse JavaScript/JXA code
+			const acorn = await import('acorn');
 
-/**
- * Recursively build a DocumentSymbol for a function/tell node.
- */
-export function makeFuncSymbol(
-	nodeIdx: number,
-	nodesArr: ReturnType<typeof buildNodeTree>,
-	variablesArr: Array<{ name: string; index: number }>,
-	document: TextDocument,
-): DocumentSymbol {
-	const node = nodesArr[nodeIdx];
-	if (!node) {
-		const p = document.positionAt(0);
-		return new DocumentSymbol('unknown', '', SymbolKind.Function, new Range(p, p), new Range(p, p));
-	}
-	const start = document.positionAt(node.start);
-	const end = document.positionAt(node.end);
-	const sym = new DocumentSymbol(node.name, '', SymbolKind.Function, new Range(start, end), new Range(start, start));
-	const childFuncSyms = node.children.map((ci) => makeFuncSymbol(ci, nodesArr, variablesArr, document));
-	const varSyms = makeVarSymbolsForNode(nodeIdx, nodesArr, variablesArr, document);
-	sym.children = [...childFuncSyms, ...varSyms];
-	return sym;
-}
+			// Parse the code into an AST
+			const ast = acorn.parse(text, {
+				ecmaVersion: 'latest',
+				sourceType: 'script', // JXA behaves more like a script than a module
+				locations: true,
+				allowReturnOutsideFunction: true,
+				allowImportExportEverywhere: true,
+				allowAwaitOutsideFunction: true,
+			}) as Program;
 
-/**
- * Emit final DocumentSymbol array from collected pieces.
- */
-export function emitSymbols(
-	document: TextDocument,
-	properties: Array<{ name: string; index: number }>,
-	variables: Array<{ name: string; index: number }>,
-	entryPoints: Array<{ name: string; index: number }>,
-	nodes: ReturnType<typeof buildNodeTree>,
-) {
-	const out: DocumentSymbol[] = [];
-	for (const p of properties) {
-		const propStart = document.positionAt(p.index);
-		const propLineEnd = document.lineAt(propStart.line).range.end;
-		out.push(
-			new DocumentSymbol(
-				p.name,
-				'',
-				SymbolKind.Property,
-				new Range(propStart, propLineEnd),
-				new Range(propStart, propStart),
-			),
-		);
-	}
-	const handlerRanges = nodes.map((n) => ({ start: n.start, end: n.end }));
-	const globals = variables.filter((v) => !handlerRanges.some((r) => v.index > r.start && v.index < r.end));
-	for (const v of dedupeByName(globals)) {
-		const varStart = document.positionAt(v.index);
-		const varLineEnd = document.lineAt(varStart.line).range.end;
-		out.push(
-			new DocumentSymbol(
-				v.name,
-				'',
-				SymbolKind.Variable,
-				new Range(varStart, varLineEnd),
-				new Range(varStart, varStart),
-			),
-		);
-	}
-	for (const e of entryPoints) {
-		const entryStart = document.positionAt(e.index);
-		const entryLineEnd = document.lineAt(entryStart.line).range.end;
-		out.push(
-			new DocumentSymbol(
-				e.name,
-				'',
-				SymbolKind.Event,
-				new Range(entryStart, entryLineEnd),
-				new Range(entryStart, entryStart),
-			),
-		);
-	}
-	for (let i = 0; i < nodes.length; i++) {
-		if (nodes[i]?.parent === -1) out.push(makeFuncSymbol(i, nodes, variables, document));
-	}
-	return out;
-}
+			const symbols: DocumentSymbol[] = [];
+			const processedNodes = new WeakSet<Node>();
 
-/**
- * AppleScript Document Symbol Provider.
- *
- * This provider implements a line-based, stack-driven parser that extracts
- * AppleScript "handlers" (on/to), "tell" blocks and a set of top-level
- * symbols (properties, variables, and bare entry-point calls). It returns an
- * array of `DocumentSymbol` objects suitable for the VS Code outline/view.
- *
- * Key behaviors:
- * - Skips lines that are commented with `--`.
- * - Detects handler openers (`on` / `to`) and closes them on matching `end`.
- * - Treats `on error` inside `try` as part of the `try` block (not a top-level handler).
- * - Recognizes common block keywords (`if`, `repeat`, `try`, `using terms`, `with timeout`, etc.)
- *   to properly nest and ignore non-handler blocks.
- * - Collects `property` declarations and `set <var> to` assignments and nests
- *   variables under the handler they belong to while exposing globals at top-level.
- * - Collects bare entry points (e.g. `myHandler` or `myHandler()`) outside of handlers.
- * - Dedupe is applied where appropriate to keep the earliest occurrence of repeated names.
- *
- * The implementation intentionally uses a conservative line scanner rather
- * than a full parser to keep the provider fast and tolerant of partial/invalid
- * code while giving useful outline symbols.
- */
-// AppleScript Document Symbol Provider (Outline)
-export const appleScriptSymbolProvider: DocumentSymbolProvider = {
-	provideDocumentSymbols(document) {
-		const text = document.getText();
-		const propertyRegex = /^\s*property\s+(\w+)\s*:/gm;
-		// Allow bare calls with or without parentheses, e.g. myHandler or myHandler()
-		const entryPointRegex = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:\(\s*\))?\s*$/gm;
-		const varRegex = /^\s*set\s+(\w+)\s+to\b/gm;
+			// Process top-level declarations only
+			for (const node of ast.body) {
+				switch (node.type) {
+					case 'ClassDeclaration': {
+						const classDecl = node as ClassDeclaration;
+						if (classDecl.id) {
+							const classSymbol = createSymbol(classDecl, classDecl.id.name, SymbolKind.Class);
+							symbols.push(classSymbol);
+							processedNodes.add(node);
 
-		// Centralize AppleScript block keywords
-		const blockOpeners = ['if', 'repeat', 'try', 'considering', 'ignoring', 'using terms', 'with timeout'] as const;
-		// For "end" lines, AppleScript uses e.g. "end timeout" rather than "end with timeout"
-		const blockEndQualifiers = ['try', 'if', 'repeat', 'considering', 'ignoring', 'using terms', 'timeout'] as const;
+							// Process class methods
+							for (const member of classDecl.body.body) {
+								if (member.type === 'MethodDefinition' && member.key) {
+									const key = member.key as Identifier;
+									const methodName = key.name;
+									if (methodName) {
+										const methodSymbol = createSymbol(
+											member,
+											methodName,
+											member.kind === 'constructor' ? SymbolKind.Constructor : SymbolKind.Method,
+										);
+										classSymbol.children.push(methodSymbol);
 
-		const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		const blockOpenRe = new RegExp(`^\\s*(?:${blockOpeners.map(escapeRegex).join('|')})\\b`, 'i');
-
-		// Helpers
-		const findLastIndex = <T>(arr: T[], pred: (t: T) => boolean): number => {
-			for (let i = arr.length - 1; i >= 0; i--) if (pred(arr[i] as T)) return i;
-			return -1;
-		};
-		const isCommentAtOffset = (offset: number): boolean => {
-			const pos = document.positionAt(offset);
-			const lt = document.lineAt(pos.line).text;
-			return /^\s*--/.test(lt);
-		};
-
-		// Build function/tell blocks using a stack-based line scanner for accurate ranges
-		const parseFunctionBlocks = (): Array<{ name: string; start: number; end: number; type: 'handler' | 'tell' }> => {
-			const functionBlocks: Array<{ name: string; start: number; end: number; type: 'handler' | 'tell' }> = [];
-			const stack: Array<{ type: 'handler' | 'tell' | 'block'; name?: string; kind?: string; start: number }> = [];
-			for (let ln = 0; ln < document.lineCount; ln++) {
-				const lineRange = document.lineAt(ln).range;
-				const lineText = document.getText(lineRange);
-				// Skip line comments
-				if (/^\s*--/.test(lineText)) {
-					continue;
-				}
-				const openerHandler = /^\s*(?:on|to)\s+(\w+)/i.exec(lineText);
-				if (openerHandler) {
-					const hName = (openerHandler[1] ?? '').toLowerCase();
-					// Skip 'on error' inside a try-block; it's not a standalone handler, but part of 'try...on error...end try'
-					const inTry = stack.some((s) => s.type === 'block' && (s.kind ?? '') === 'try');
-					if (hName === 'error' && inTry) {
-						// Do not treat as a handler
-					} else {
-						stack.push({ type: 'handler', name: openerHandler[1] ?? '', start: document.offsetAt(lineRange.start) });
-						continue;
-					}
-				}
-				const tellOpen = /^\s*tell\s+(.*)$/i.exec(lineText);
-				if (tellOpen) {
-					const rest = (tellOpen[1] ?? '').trim();
-					const display = rest ? `tell ${rest}` : 'tell';
-					stack.push({ type: 'tell', name: display, start: document.offsetAt(lineRange.start) });
-					continue;
-				}
-				const blockOpen = blockOpenRe.exec(lineText);
-				if (blockOpen) {
-					const kind = (blockOpen[0] ?? '').trim().toLowerCase();
-					stack.push({ type: 'block', kind, start: document.offsetAt(lineRange.start) });
-					continue;
-				}
-				const endMatch = /^\s*end(?:\s+([\w\s]+))?\b/i.exec(lineText);
-				if (endMatch) {
-					const qualifier = (endMatch[1] ?? '').toLowerCase().trim();
-					const closeAndRecord = (idx: number) => {
-						const item = stack.splice(idx, 1)[0];
-						if (item && (item.type === 'handler' || item.type === 'tell')) {
-							functionBlocks.push({
-								name: item.name ?? '',
-								start: item.start,
-								end: document.offsetAt(lineRange.end),
-								type: item.type,
-							});
+										// Process method body
+										if (member.value.body) {
+											processBlockContent(member.value.body.body, methodSymbol, processedNodes);
+										}
+									}
+								}
+							}
 						}
-					};
-
-					if (qualifier.startsWith('tell')) {
-						const idx = findLastIndex(stack, (s) => s.type === 'tell');
-						if (idx !== -1) closeAndRecord(idx);
-						else if (stack.length) closeAndRecord(stack.length - 1);
-						continue;
-					}
-					if (
-						blockEndQualifiers.some((k) => (k === 'timeout' ? qualifier.includes('timeout') : qualifier.startsWith(k)))
-					) {
-						const idx = findLastIndex(stack, (s) => s.type === 'block');
-						if (idx !== -1) stack.splice(idx, 1);
-						else if (stack.length) stack.pop();
-						continue;
-					}
-					if (qualifier.length > 0) {
-						const idx = findLastIndex(stack, (s) => s.type === 'handler' && (s.name ?? '').toLowerCase() === qualifier);
-						if (idx !== -1) {
-							closeAndRecord(idx);
-							continue;
-						}
-					}
-					// Plain 'end' fallback
-					if (stack.length) closeAndRecord(stack.length - 1);
-				}
-			}
-			// Sort by start position
-			functionBlocks.sort((a, b) => a.start - b.start);
-			return functionBlocks;
-		};
-		const functionBlocks = parseFunctionBlocks();
-
-		// Collect property declarations
-		const collectProperties = (): Array<{ name: string; index: number }> => {
-			const out: Array<{ name: string; index: number }> = [];
-			let m = propertyRegex.exec(text);
-			while (m !== null) {
-				const name = m[1] ?? '';
-				const index = typeof m.index === 'number' ? m.index : 0;
-				if (!isCommentAtOffset(index)) out.push({ name, index });
-				m = propertyRegex.exec(text);
-			}
-			return out;
-		};
-		const properties = collectProperties();
-
-		// Collect variable assignments
-		const collectVariables = (): Array<{ name: string; index: number }> => {
-			const out: Array<{ name: string; index: number }> = [];
-			let m = varRegex.exec(text);
-			while (m !== null) {
-				const name = m[1] ?? '';
-				const index = typeof m.index === 'number' ? m.index : 0;
-				if (!isCommentAtOffset(index)) out.push({ name, index });
-				m = varRegex.exec(text);
-			}
-			return out;
-		};
-		const variables = collectVariables();
-
-		// Build symbols, nesting variables under their handler, and add global variables as top-level
-		const handlerRanges: Array<{ start: number; end: number }> = functionBlocks.map((b) => ({
-			start: b.start,
-			end: b.end,
-		}));
-
-		// Build a tree of function/tell blocks (parent-child relations)
-		const buildNodeTree = (blocks: Array<{ name: string; start: number; end: number; type: 'handler' | 'tell' }>) => {
-			const ns = blocks.map((b, i) => ({ ...b, idx: i, parent: -1 as number, children: [] as number[] }));
-			for (let i = 0; i < ns.length; i++) {
-				for (let j = i - 1; j >= 0; j--) {
-					const ni = ns[i];
-					const nj = ns[j];
-					if (!ni || !nj) continue;
-					if (nj.start <= ni.start && ni.end <= nj.end) {
-						ni.parent = j;
-						nj.children.push(i);
 						break;
 					}
-				}
-			}
-			return ns;
-		};
-		const nodes = buildNodeTree(functionBlocks);
 
-		// Helper: dedupe by variable name, keeping first occurrence
-		const dedupeByName = (items: Array<{ name: string; index: number }>) => {
-			const seen = new Set<string>();
-			const result: Array<{ name: string; index: number }> = [];
-			for (const it of items.sort((a, b) => a.index - b.index)) {
-				if (!seen.has(it.name)) {
-					seen.add(it.name);
-					result.push(it);
-				}
-			}
-			return result;
-		};
+					case 'FunctionDeclaration': {
+						const funcDecl = node as FunctionDeclaration;
+						if (funcDecl.id) {
+							const funcSymbol = createSymbol(funcDecl, funcDecl.id.name, SymbolKind.Function);
+							symbols.push(funcSymbol);
+							processedNodes.add(node);
 
-		/**
-		 * Collect top-level entry points (bare calls) that are not inside handlers.
-		 */
-		const entryPoints = collectEntryPoints(text, document, entryPointRegex, handlerRanges, functionBlocks);
+							// Process function body
+							processBlockContent(funcDecl.body.body, funcSymbol, processedNodes);
+						}
+						break;
+					}
 
-		/**
-		 * Emit final DocumentSymbol array from collected pieces.
-		 */
-		const emitSymbols = () => {
-			const out: DocumentSymbol[] = [];
-
-			// properties
-			for (const p of properties) {
-				const propStart = document.positionAt(p.index);
-				const propLineEnd = document.lineAt(propStart.line).range.end;
-				out.push(
-					new DocumentSymbol(
-						p.name,
-						'',
-						SymbolKind.Property,
-						new Range(propStart, propLineEnd),
-						new Range(propStart, propStart),
-					),
-				);
-			}
-
-			// globals
-			const globals = variables.filter((v) => !handlerRanges.some((r) => v.index > r.start && v.index < r.end));
-			for (const v of dedupeByName(globals)) {
-				const varStart = document.positionAt(v.index);
-				const varLineEnd = document.lineAt(varStart.line).range.end;
-				out.push(
-					new DocumentSymbol(
-						v.name,
-						'',
-						SymbolKind.Variable,
-						new Range(varStart, varLineEnd),
-						new Range(varStart, varStart),
-					),
-				);
-			}
-
-			// entry points
-			for (const e of entryPoints) {
-				const entryStart = document.positionAt(e.index);
-				const entryLineEnd = document.lineAt(entryStart.line).range.end;
-				out.push(
-					new DocumentSymbol(
-						e.name,
-						'',
-						SymbolKind.Event,
-						new Range(entryStart, entryLineEnd),
-						new Range(entryStart, entryStart),
-					),
-				);
-			}
-
-			// functions/tells
-			for (let i = 0; i < nodes.length; i++) {
-				if (nodes[i]?.parent === -1) {
-					out.push(_makeFuncSymbol(i, nodes, variables));
+					case 'VariableDeclaration':
+						processVariableDeclaration(node as VariableDeclaration, symbols, processedNodes);
+						break;
 				}
 			}
 
-			return out;
-		};
-
-		// Helper: build variable symbols belonging to a node but not inside its child nodes
-		function makeVarSymbolsForNode(
-			nodeIdx: number,
-			nodesArr: typeof nodes,
-			variablesArr: Array<{ name: string; index: number }>,
-		) {
-			const node = nodesArr[nodeIdx];
-			if (!node) return [] as DocumentSymbol[];
-			const childRanges = node.children
-				.map((ci) => nodesArr[ci])
-				.filter((c): c is typeof node => Boolean(c))
-				.map((c) => ({ start: c.start, end: c.end }));
-			const ownVars = variablesArr.filter(
-				(v) =>
-					v.index > node.start && v.index < node.end && !childRanges.some((r) => v.index > r.start && v.index < r.end),
-			);
-			return dedupeByName(ownVars).map((v) => {
-				const varStart = document.positionAt(v.index);
-				const varLineEnd = document.lineAt(varStart.line).range.end;
-				return new DocumentSymbol(
-					v.name,
-					'',
-					SymbolKind.Variable,
-					new Range(varStart, varLineEnd),
-					new Range(varStart, varStart),
-				);
-			});
-		}
-
-		// Recursively build function/tell symbols tree (pure helper)
-		function _makeFuncSymbol(
-			nodeIdx: number,
-			nodesArr: typeof nodes,
-			variablesArr: Array<{ name: string; index: number }>,
-		): DocumentSymbol {
-			const node = nodesArr[nodeIdx];
-			if (!node) {
-				const p = document.positionAt(0);
-				return new DocumentSymbol('unknown', '', SymbolKind.Function, new Range(p, p), new Range(p, p));
-			}
-			const start = document.positionAt(node.start);
-			const end = document.positionAt(node.end);
-			const sym = new DocumentSymbol(
-				node.name,
-				'',
-				SymbolKind.Function,
-				new Range(start, end),
-				new Range(start, start),
-			);
-			const childFuncSyms = node.children.map((ci) => _makeFuncSymbol(ci, nodesArr, variablesArr));
-			const varSyms = makeVarSymbolsForNode(nodeIdx, nodesArr, variablesArr);
-			sym.children = [...childFuncSyms, ...varSyms];
-			return sym;
-		}
-
-		const symbols = emitSymbols();
-		if (!Array.isArray(symbols)) {
+			return symbols;
+		} catch (error) {
+			console.error('Error parsing JXA file:', error);
 			return [];
 		}
-		return symbols.filter((s) => s instanceof DocumentSymbol);
 	},
 };

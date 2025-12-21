@@ -1,7 +1,6 @@
 import { spawn } from 'node:child_process';
 import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
-// Dependencies
 import { basename, dirname, extname, join } from 'node:path';
 import lineColumn from 'line-column';
 import { type OutputChannel, window } from 'vscode';
@@ -23,14 +22,14 @@ async function getLineCol(lineString: string): Promise<string | boolean> {
 	const doc = window.activeTextEditor?.document;
 
 	if (!doc) {
-		console.error('[idleberg.applescript] Document not found');
+		console.error('[idleberg.jxa] Document not found');
 		return false;
 	}
 
 	const editorText = doc.getText();
 
 	if (!editorText?.length) {
-		console.error('[idleberg.applescript] Empty document');
+		console.error('[idleberg.jxa] Empty document');
 		return false;
 	}
 
