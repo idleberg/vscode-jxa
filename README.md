@@ -5,6 +5,9 @@
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/idleberg/jxa?style=for-the-badge&label=Open%20VSX)](https://open-vsx.org/extension/idleberg/jxa)
 [![Build](https://img.shields.io/github/actions/workflow/status/idleberg/vscode-jxa/default.yml?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/actions)
 
+> [!NOTE]
+> This extension has been separated from [`idleberg.applescript`](https://github.com/idleberg/vscode-applescript) and is now in maintencance mode. If you are interested in adopting it, please get in touch on [GitHub](github.com/idleberg/vscode-jxa/discussions).
+
 Language syntax, snippets and build system for JavaScript for Automation (JXA)
 
 ## Installation
