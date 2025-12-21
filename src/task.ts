@@ -12,7 +12,7 @@ async function createBuildTask(): Promise<void> {
 		return;
 	}
 
-	const { alwaysOpenBuildTask, defaultBuildTask, osacompile, osascript } = await getConfig('applescript');
+	const { alwaysOpenBuildTask, defaultBuildTask, osacompile, osascript } = await getConfig('jxa');
 
 	const doc = window.activeTextEditor?.document;
 

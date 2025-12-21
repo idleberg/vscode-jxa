@@ -38,7 +38,7 @@ export async function pick() {
 		return;
 	}
 
-	const { allowMultiTermination } = await getConfig('applescript');
+	const { allowMultiTermination } = await getConfig('jxa');
 
 	const pick = await window.showQuickPick(processList, {
 		canPickMany: allowMultiTermination,

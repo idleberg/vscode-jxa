@@ -3,10 +3,10 @@ import { window } from 'vscode';
 import { getConfig } from 'vscode-get-config';
 import { getOutName, spawnPromise } from './util.ts';
 
-const outputChannel = window.createOutputChannel('AppleScript');
+const outputChannel = window.createOutputChannel('JXA');
 
 async function osacompile(compileTarget: string): Promise<void> {
-	const { ignoreOS, osacompile, showNotifications } = await getConfig('applescript');
+	const { ignoreOS, osacompile, showNotifications } = await getConfig('jxa');
 
 	// might become useful in a future release
 	const options = { ...osacompile };
@@ -62,7 +62,7 @@ async function osacompile(compileTarget: string): Promise<void> {
 }
 
 async function osascript(): Promise<void> {
-	const { ignoreOS, osascript, showNotifications } = await getConfig('applescript');
+	const { ignoreOS, osascript, showNotifications } = await getConfig('jxa');
 
 	if (platform() !== 'darwin' && ignoreOS !== true) {
 		window.showWarningMessage('This command is only available on macOS');

@@ -1,15 +1,11 @@
-# AppleScript for Visual Studio Code
+# vscode-jxa
 
 [![Version](https://img.shields.io/github/v/release/idleberg/vscode-jxa?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/releases)
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/idleberg.jxa?style=for-the-badge&label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=idleberg.jxa)
-[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/idleberg/applescript?style=for-the-badge&label=Open%20VSX)](https://open-vsx.org/extension/idleberg/applescript)
+[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/idleberg/jxa?style=for-the-badge&label=Open%20VSX)](https://open-vsx.org/extension/idleberg/jxa)
 [![Build](https://img.shields.io/github/actions/workflow/status/idleberg/vscode-jxa/default.yml?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/actions)
 
-Language syntax, snippets and build system for AppleScript and JavaScript for Automation
-
-![Screenshot](https://raw.githubusercontent.com/idleberg/vscode-jxa/main/resources/screenshot.png)
-
-_Screenshot of AppleScript in Visual Studio Code with [Hopscotch](https://marketplace.visualstudio.com/items?itemName=idleberg.hopscotch) theme_
+Language syntax, snippets and build system for JavaScript for Automation (JXA)
 
 ## Installation
 
@@ -30,7 +26,7 @@ With [shell commands](https://code.visualstudio.com/docs/editor/command-line) in
 Download the packaged extension from the the [release page](https://github.com/idleberg/vscode-jxa/releases) and install it from the command-line:
 
 ```bash
-$ code --install-extension path/to/applescript-*.vsix
+$ code --install-extension path/to/jxa-*.vsix
 ```
 
 Alternatively, you can download the packaged extension from the [Open VSX Registry](https://open-vsx.org/) or install it using the [`ovsx`](https://www.npmjs.com/package/ovsx) command-line tool:
@@ -45,10 +41,6 @@ $ ovsx get idleberg.jxa
 
 On macOS, you can make use of the following build commands through the [command-palette](https://code.visualstudio.com/docs/editor/codebasics#_command-palette):
 
-- AppleScript: Run Script – <kbd>Shift ⇧</kbd>+<kbd>Option ⌥</kbd>+<kbd>R</kbd>
-- AppleScript: Compile Script – <kbd>Shift ⇧</kbd>+<kbd>Option ⌥</kbd>+<kbd>B</kbd>
-- AppleScript: Compile Script bundle
-- AppleScript: Compile Application
 - JXA: Run Script
 - JXA: Compile Script
 - JXA: Compile Script bundle
@@ -69,22 +61,6 @@ You can tweak the defaults for this package, `osacompile` and `osascript` in the
 | `osacompile.stayOpen`          | `false`    | Stay open after run handler                                                                        |
 | `osacompile.startupScreen`     | `false`    | Show startup-screen                                                                                |
 | `osascript.outputStyle`        | -          | The flags argument is a string consisting of any of the modifier characters `e`, `h`, `o`, and `s` |
-| `scpt.theme`                   | `"(none)"` | Custom syntax theme for binary AppleScript files, which are opened in a custom web-view            |
-| `scpt.overrideThemeBackground` | `false`    | Allows overriding the syntax-theme's background color                                              |
-
-#### File Encoding
-
-The default character encoding for AppleScript text files is [Mac Roman](https://www.wikiwand.com/en/Mac_OS_Roman). If you wish to change this, you can do so in the settings.
-
-**Example:**
-
-```json
-{
-	"[applescript]": {
-		"files.encoding": "utf16le"
-	}
-}
-```
 
 ## License
 

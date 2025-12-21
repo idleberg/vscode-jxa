@@ -1,7 +1,7 @@
 {
-	"name": "applescript",
-	"displayName": "AppleScript",
-	"description": "Language syntax, snippets and build system for AppleScript and JavaScript for Automation",
+	"name": "jxa",
+	"displayName": "JXA",
+	"description": "Language syntax, snippets and build system for JavaScript for Automation (JXA)",
 	"version": "0.28.2",
 	"publisher": "idleberg",
 	"license": "MIT",
@@ -22,7 +22,6 @@
 	},
 	"keywords": [
 		"apple",
-		"applescript",
 		"jxa",
 		"javascript for automation",
 		"macos"
@@ -49,40 +48,35 @@
 		"onLanguage:javascript"
 	],
 	"contributes": {
-		"configurationDefaults": {
-			"[applescript]": {
-				"files.encoding": "macroman"
-			}
-		},
 		"configuration": {
 			"type": "object",
-			"title": "AppleScript",
+			"title": "JXA",
 			"properties": {
-				"applescript.showNotifications": {
+				"jxa.showNotifications": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show build notifications indicating success or failure",
 					"order": 1
 				},
-				"applescript.alwaysShowOutput": {
+				"jxa.alwaysShowOutput": {
 					"type": "boolean",
 					"default": false,
 					"description": "Specify whether to show the output panel on errors only or on each build",
 					"order": 2
 				},
-				"applescript.convertErrorRange": {
+				"jxa.convertErrorRange": {
 					"type": "boolean",
 					"default": false,
 					"description": "Convert error range to line/column",
 					"order": 3
 				},
-				"applescript.alwaysOpenBuildTask": {
+				"jxa.alwaysOpenBuildTask": {
 					"type": "boolean",
 					"default": true,
 					"description": "Specify whether to open the newly created build task",
 					"order": 4
 				},
-				"applescript.defaultBuildTask": {
+				"jxa.defaultBuildTask": {
 					"type": "string",
 					"enum": [
 						"script",
@@ -93,81 +87,37 @@
 					"description": "Specify the default build task when creating a new task file",
 					"order": 5
 				},
-				"applescript.ignoreOS": {
+				"jxa.ignoreOS": {
 					"type": "boolean",
 					"default": false,
 					"description": "For debugging purposes, you can disable the OS eligibility test",
 					"order": 6
 				},
-				"applescript.osacompile.executeOnly": {
+				"jxa.osacompile.executeOnly": {
 					"type": "boolean",
 					"default": false,
 					"description": "Save the resulting script as execute-only",
 					"order": 8
 				},
-				"applescript.osacompile.stayOpen": {
+				"jxa.osacompile.stayOpen": {
 					"type": "boolean",
 					"default": false,
 					"description": "Stay open after run handler",
 					"order": 9
 				},
-				"applescript.osacompile.startupScreen": {
+				"jxa.osacompile.startupScreen": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show startup-screen",
 					"order": 10
 				},
-				"applescript.osascript.outputStyle": {
+				"jxa.osascript.outputStyle": {
 					"type": "string",
 					"default": "",
 					"markdownDescription": "%osascriptOutputStyle%",
 					"order": 11
 				},
-				"applescript.scpt.theme": {
-					"type": "string",
-					"enum": [
-						"(none)",
-						"css-variables",
-						"dark-plus",
-						"dracula-soft",
-						"dracula",
-						"github-dark-dimmed",
-						"github-dark",
-						"github-light",
-						"hc_light",
-						"light-plus",
-						"material-theme-darker",
-						"material-theme-lighter",
-						"material-theme-ocean",
-						"material-theme-palenight",
-						"material-theme",
-						"min-dark",
-						"min-light",
-						"monokai",
-						"nord",
-						"one-dark-pro",
-						"poimandres",
-						"rose-pine-dawn",
-						"rose-pine-moon",
-						"rose-pine",
-						"slack-dark",
-						"slack-ochin",
-						"solarized-dark",
-						"solarized-light",
-						"vitesse-dark",
-						"vitesse-light"
-					],
-					"default": "(none)",
-					"markdownDescription": "You can specify a syntax theme for binary AppleScript files, which are displayed in a custom web-view. Changes apply after re-opening the file or editor.",
-					"order": 13
-				},
-				"applescript.scpt.overrideThemeBackground": {
-					"type": "boolean",
-					"default": false,
-					"description": "Override theme background color of the syntax theme. Changes apply after re-opening the file or editor.",
-					"order": 14
-				},
-				"applescript.allowMultiTermination": {
+				"jxa.allowMultiTermination": {
 					"type": "boolean",
 					"default": false,
 					"description": "Allows the selection of multiple processes to be terminated",
@@ -249,12 +199,12 @@
 				},
 				{
 					"when": "resourceLangId == jxa",
-					"command": "extension.applescript.terminateProcess",
+					"command": "extension.jxa.terminateProcess",
 					"group": "navigation@5"
 				},
 				{
 					"when": "resourceLangId == jxa",
-					"command": "extension.applescript.openSettings",
+					"command": "extension.jxa.openSettings",
 					"group": "navigation@6"
 				}
 			]
@@ -271,24 +221,6 @@
 					".jxainc"
 				],
 				"configuration": "./config/jxa.configuration.json"
-			},
-			{
-				"id": "applescript-injection"
-			}
-		],
-		"customEditors": [
-			{
-				"viewType": "applescript.binary",
-				"displayName": "AppleScript (Binary)",
-				"selector": [
-					{
-						"filenamePattern": "*.scpt"
-					},
-					{
-						"filenamePattern": "*.scptd"
-					}
-				],
-				"priority": "default"
 			}
 		],
 		"grammars": [
