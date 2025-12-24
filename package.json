@@ -209,33 +209,12 @@
 				}
 			]
 		},
-		"languages": [
-			{
-				"id": "jxa",
-				"aliases": [
-					"JavaScript for Automation (JXA)",
-					"jxa"
-				],
-				"extensions": [
-					".jxa",
-					".jxainc"
-				],
-				"configuration": "./config/jxa.configuration.json"
-			}
-		],
-		"grammars": [
-			{
-				"language": "jxa",
-				"scopeName": "source.js.jxa",
-				"path": "./syntaxes/jxa.tmLanguage",
-				"embeddedLanguages": {
-					"source.js": "javascript"
-				}
-			}
-		]
+		"contributes": {
+			"typings": "./node_modules/@jxa/global-type/types/index.d.ts"
+		}
 	},
 	"dependencies": {
-		"acorn": "^8.15.0",
+		"@jxa/global-type": "^1.4.0",
 		"line-column": "^1.0.2",
 		"vscode-get-config": "^0.6.2"
 	},
