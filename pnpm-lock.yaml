@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      acorn:
-        specifier: ^8.15.0
-        version: 8.15.0
+      '@jxa/global-type':
+        specifier: ^1.4.0
+        version: 1.4.0
       line-column:
         specifier: ^1.0.2
         version: 1.0.2
@@ -456,6 +456,12 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
+  '@jxa/global-type@1.4.0':
+    resolution: {integrity: sha512-3Gg632we69oelbanFFQ1XbKTfqEYzwQxg00O13XG2an6IJzP829XLKjv0EDy/UtublyZbZFCk1CmDXq9ku4oGw==}
+
+  '@jxa/types@1.4.0':
+    resolution: {integrity: sha512-3MNk9eYHAdNVUGASHrfvadVL5sE/NMet0CAugHERsofmLp4SYRGCD+sXAMjlnpRjL1g3q7nkAU9wUL2h0Z+LQA==}
+
   '@loaderkit/resolve@1.0.4':
     resolution: {integrity: sha512-rJzYKVcV4dxJv+vW6jlvagF8zvGxHJ2+HTr1e2qOejfmGhAApgJHl8Aog4mMszxceTRiKTTbnpgmTO1bEZHV/A==}
 
@@ -572,11 +578,6 @@ packages:
 
   JSONStream@1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
-    hasBin: true
-
-  acorn@8.15.0:
-    resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
-    engines: {node: '>=0.4.0'}
     hasBin: true
 
   ajv@8.17.1:
@@ -1973,6 +1974,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@jxa/global-type@1.4.0':
+    dependencies:
+      '@jxa/types': 1.4.0
+
+  '@jxa/types@1.4.0': {}
+
   '@loaderkit/resolve@1.0.4':
     dependencies:
       '@braidai/lang': 1.1.2
@@ -2058,8 +2065,6 @@ snapshots:
     dependencies:
       jsonparse: 1.3.1
       through: 2.3.8
-
-  acorn@8.15.0: {}
 
   ajv@8.17.1:
     dependencies:

@@ -40,8 +40,6 @@
 		"vscode": "^1.85.0"
 	},
 	"categories": [
-		"Programming Languages",
-		"Snippets",
 		"Other"
 	],
 	"activationEvents": [
@@ -178,32 +176,32 @@
 		"menus": {
 			"editor/title": [
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.run",
 					"group": "navigation@1"
 				},
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.compile",
 					"group": "navigation@2"
 				},
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.compileBundle",
 					"group": "navigation@3"
 				},
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.compileApp",
 					"group": "navigation@4"
 				},
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.terminateProcess",
 					"group": "navigation@5"
 				},
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.openSettings",
 					"group": "navigation@6"
 				}
