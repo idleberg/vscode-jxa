@@ -1,6 +1,5 @@
-import { commands, type ExtensionContext, languages } from 'vscode';
+import { commands, type ExtensionContext } from 'vscode';
 import { osacompile, osascript } from './osa.ts';
-import { jxaSymbolProvider } from './outline.ts';
 import { pick } from './processes.ts';
 import { createBuildTask } from './task.ts';
 
@@ -33,8 +32,6 @@ async function activate(context: ExtensionContext): Promise<void> {
 		commands.registerTextEditorCommand('extension.jxa.terminateProcess', async () => {
 			await pick();
 		}),
-
-		languages.registerDocumentSymbolProvider({ language: 'jxa' }, jxaSymbolProvider),
 	);
 }
 
