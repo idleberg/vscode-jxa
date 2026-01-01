@@ -1,3 +1,9 @@
+# v0.2.1 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.1)
+
+- update tsdown config
+- update logo icon
+- update dependencies
+
 # v0.2.0 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.0)
 
 - add logo icon
@@ -8,4 +14,5 @@
 
 # v0.1.0 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.1.0)
 
-- first release (based on [idleberg.applescript](https://github.com/idleberg/vscode-applescript/releases/tag/v0.28.2))
+- first release (based on
+  [idleberg.applescript](https://github.com/idleberg/vscode-applescript/releases/tag/v0.28.2))
