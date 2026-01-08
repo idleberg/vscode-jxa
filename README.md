@@ -6,7 +6,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/idleberg/vscode-jxa/default.yml?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/actions)
 
 > [!IMPORTANT]
-> This extension has been separated from [`idleberg.applescript`](https://github.com/idleberg/vscode-applescript) and is now in maintencance mode. If you are interested in adopting it, [please get in touch]([github.com/idleberg/vscode-jxa/discussions](https://github.com/idleberg/vscode-jxa/discussions/2)).
+> This extension has been separated from [`idleberg.applescript`](https://github.com/idleberg/vscode-applescript) and is now in maintencance mode. If you are interested in adopting it, [please get in touch](https://github.com/idleberg/vscode-jxa/discussions/2).
 
 Language syntax, snippets and build system for JavaScript for Automation (JXA)
 
