@@ -1,3 +1,7 @@
+# v0.2.2 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.2)
+
+- use native icons
+
 # v0.2.1 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.1)
 
 - update tsdown config
