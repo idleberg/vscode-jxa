@@ -129,50 +129,32 @@
 			{
 				"command": "extension.jxa.run",
 				"title": "JXA: Run Script",
-				"icon": {
-					"dark": "./resources/dark/run.svg",
-					"light": "./resources/light/run.svg"
-				}
+				"icon": "$(play)"
 			},
 			{
 				"command": "extension.jxa.compile",
 				"title": "JXA: Compile Script",
-				"icon": {
-					"dark": "./resources/dark/script.svg",
-					"light": "./resources/light/script.svg"
-				}
+				"icon": "$(save)"
 			},
 			{
 				"command": "extension.jxa.compileBundle",
 				"title": "JXA: Compile Script bundle",
-				"icon": {
-					"dark": "./resources/dark/bundle.svg",
-					"light": "./resources/light/bundle.svg"
-				}
+				"icon": "$(layers)"
 			},
 			{
 				"command": "extension.jxa.compileApp",
 				"title": "JXA: Compile Application",
-				"icon": {
-					"dark": "./resources/dark/app.svg",
-					"light": "./resources/light/app.svg"
-				}
+				"icon": "$(package)"
 			},
 			{
 				"command": "extension.jxa.openSettings",
 				"title": "JXA: Open Settings",
-				"icon": {
-					"dark": "./resources/dark/settings.svg",
-					"light": "./resources/light/settings.svg"
-				}
+				"icon": "$(settings)"
 			},
 			{
 				"command": "extension.jxa.terminateProcess",
 				"title": "JXA: Terminate Process",
-				"icon": {
-					"dark": "./resources/dark/terminate.svg",
-					"light": "./resources/light/terminate.svg"
-				}
+				"icon": "$(close)"
 			}
 		],
 		"menus": {
