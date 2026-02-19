@@ -1,3 +1,8 @@
+# v0.2.3 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.3)
+
+- update icons and menu order
+- allow overwriting task files
+
 # v0.2.2 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.2)
 
 - use native icons
