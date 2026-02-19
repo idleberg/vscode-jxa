@@ -190,7 +190,7 @@
 					"group": "navigation@5"
 				},
 				{
-					"when": "resourceLangId == jxa",
+					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.createBuildTask",
 					"group": "navigation@6"
 				},
