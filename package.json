@@ -132,19 +132,24 @@
 				"icon": "$(play)"
 			},
 			{
+				"command": "extension.jxa.terminateProcess",
+				"title": "JXA: Terminate Process",
+				"icon": "$(notebook-stop)"
+			},
+			{
 				"command": "extension.jxa.compile",
 				"title": "JXA: Compile Script",
-				"icon": "$(save)"
+				"icon": "$(file-code)"
 			},
 			{
 				"command": "extension.jxa.compileBundle",
 				"title": "JXA: Compile Script bundle",
-				"icon": "$(layers)"
+				"icon": "$(file-submodule)"
 			},
 			{
 				"command": "extension.jxa.compileApp",
 				"title": "JXA: Compile Application",
-				"icon": "$(package)"
+				"icon": "$(archive)"
 			},
 			{
 				"command": "extension.jxa.openSettings",
@@ -152,9 +157,9 @@
 				"icon": "$(settings)"
 			},
 			{
-				"command": "extension.jxa.terminateProcess",
-				"title": "JXA: Terminate Process",
-				"icon": "$(circle-slash)"
+				"command": "extension.jxa.createBuildTask",
+				"title": "JXA: Create Build Task",
+				"icon": "$(checklist)"
 			}
 		],
 		"menus": {
@@ -166,28 +171,33 @@
 				},
 				{
 					"when": "resourceLangId == javascript",
-					"command": "extension.jxa.compile",
+					"command": "extension.jxa.terminateProcess",
 					"group": "navigation@2"
 				},
 				{
 					"when": "resourceLangId == javascript",
-					"command": "extension.jxa.compileBundle",
+					"command": "extension.jxa.compile",
 					"group": "navigation@3"
 				},
 				{
 					"when": "resourceLangId == javascript",
-					"command": "extension.jxa.compileApp",
+					"command": "extension.jxa.compileBundle",
 					"group": "navigation@4"
 				},
 				{
 					"when": "resourceLangId == javascript",
-					"command": "extension.jxa.terminateProcess",
+					"command": "extension.jxa.compileApp",
 					"group": "navigation@5"
+				},
+				{
+					"when": "resourceLangId == jxa",
+					"command": "extension.jxa.createBuildTask",
+					"group": "navigation@6"
 				},
 				{
 					"when": "resourceLangId == javascript",
 					"command": "extension.jxa.openSettings",
-					"group": "navigation@6"
+					"group": "navigation@7"
 				}
 			]
 		},
