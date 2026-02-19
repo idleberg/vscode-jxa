@@ -154,7 +154,7 @@
 			{
 				"command": "extension.jxa.terminateProcess",
 				"title": "JXA: Terminate Process",
-				"icon": "$(close)"
+				"icon": "$(circle-slash)"
 			}
 		],
 		"menus": {
