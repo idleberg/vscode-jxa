@@ -1,6 +1,7 @@
 # v0.3.0 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.3.0)
 
 - require `vscode>=1.98.0`
+- update dependencies
 
 # v0.2.3 [#](https://github.com/idleberg/vscode-jxa/releases/tag/v0.2.3)
 
