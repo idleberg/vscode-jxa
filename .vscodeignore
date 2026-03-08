@@ -1,23 +1,18 @@
 # Development
 *.map
-.circleci/
+.claude/
 .editorconfig
-.eslintcache
-.eslintrc*
 .gitignore
 .github/
-.husky/
-.travis.yml
-gulpfile.js
+biome.jsonc
+commitlint.config.ts
+lefthook.toml
 package-lock.json
-rollup.config.js
 src/
 tools/
 tsconfig.json
 tsconfig.tsbuildinfo
-tslint.json
-types/
-webpack.config.js
+tsdown.config.mts
 
 # Package managers
 node_modules/
