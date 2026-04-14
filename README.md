@@ -1,8 +1,7 @@
 # vscode-jxa
 
+[![License](https://img.shields.io/github/license/idleberg/vscode-jxa?color=blue&style=for-the-badge)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/idleberg/vscode-jxa?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/releases)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/idleberg.jxa?style=for-the-badge&label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=idleberg.jxa)
-[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/idleberg/jxa?style=for-the-badge&label=Open%20VSX)](https://open-vsx.org/extension/idleberg/jxa)
 [![Build](https://img.shields.io/github/actions/workflow/status/idleberg/vscode-jxa/default.yml?style=for-the-badge)](https://github.com/idleberg/vscode-jxa/actions)
 
 Language syntax, snippets, and build system for JavaScript for Automation (JXA)
@@ -72,4 +71,4 @@ the package settings.
 ## License
 
 This work is licensed under
-[The MIT License](https://opensource.org/licenses/MIT).
+[The MIT License](LICENSE).
